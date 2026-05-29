@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Component
@@ -12,6 +13,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Builder
 public class Task {
+    public int idx;
     public String task;
-    public Date date;
+    public LocalDate date;
 }

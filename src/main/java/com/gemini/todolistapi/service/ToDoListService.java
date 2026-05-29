@@ -1,57 +1,62 @@
 package com.gemini.todolistapi.service;
 
+import com.gemini.todolistapi.toDoAppException.ToDoListAppException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ToDoListService {
-    Map<Integer, Task> toDoList = new ConcurrentHashMap<>();
+    HashSet<Task> toDoList = new HashSet<>();
     int index = 0;
 
-    public void addNewTask(String task, Date date){
-        toDoList.put(
-                index++,
-                Task.builder().task(task).date(date).build()
+    public void addNewTask(String task, LocalDate date){
+        toDoList.add(
+                Task.builder().task(task).idx(index++).date(date).build()
         );
     }
 
-    public String getTasByIdx(int idx){
-        return toDoList.get(idx).toString();
+    public Task getTaskByIdx(int idx) throws ToDoListAppException {
+        for(Task task : toDoList){
+            if(task.idx == idx) return task;
+        }
+        throw new ToDoListAppException("Task with index " + idx + " does not exist");
     }
 
-    public List<String> getTasksByDate(Date date){
+    public List<String> getTasksByDate(LocalDate date) throws ToDoListAppException {
         List<String> result = new ArrayList<>();
 
-        for(Task task : toDoList.values()){
-            if(task.date.compareTo(date) == 0) result.add(task.task);
+        for(Task task : toDoList){
+            if(task.date.isEqual(date)) result.add(task.task);
         }
+        if(result.isEmpty()) throw new ToDoListAppException("There are not task wtih date " + date);
         return result;
     }
 
-    public Collection<Task> getAllTasks(){
-        return toDoList.values();
+    public List<Task> getAllTasks() throws ToDoListAppException {
+        if(toDoList.isEmpty()) throw new ToDoListAppException("The list is empty");
+
+        return toDoList.stream().toList();
     }
 
-    public String deleteByIdx(int idx) throws Exception {
-        if(toDoList.containsKey(idx)){
-            String task = toDoList.get(idx).task;
-            toDoList.remove(idx);
-            return task;
-        }
-        //zrób swoje exception
-        throw new Exception("Brak takiego taska");
+    public String deleteByIdx(int idx) throws ToDoListAppException {
+        Task task = this.getTaskByIdx(idx);
+        String result = task.task;
+        toDoList.remove(task);
+        return result;
     }
 
-    public List<String> deleteAllByDate(Date date){
+    public List<String> deleteAllByDate(LocalDate date) throws ToDoListAppException {
         List<String> result = new ArrayList<>();
-        for(int idx : toDoList.keySet()){
-            if(toDoList.get(idx).date.compareTo(date) == 0){
-                result.add(toDoList.get(idx).task);
-                toDoList.remove(idx);
+        for(Task task : toDoList){
+            if(task.date.isEqual(date)){
+                result.add(task.task);
+                toDoList.remove(task);
             }
         }
+        if(result.isEmpty()) throw new ToDoListAppException("There are no task/s with date " + date);
         return result;
     }
 
